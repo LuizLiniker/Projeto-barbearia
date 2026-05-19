@@ -1,11 +1,14 @@
 const express = require("express") // biblioteca para rotas
 const bcrypt = require("bcryptjs") //biblioteca para criptografar senha
 const jwt = require("jsonwebtoken") //biblioteca de token para autenticação tela de login
+const cors = require("cors")
 const supabase = require("./db")
+
+
 
 const app = express()
 
-
+app.use(cors())
 
 app.use(express.json())
 
