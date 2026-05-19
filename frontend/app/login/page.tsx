@@ -1,6 +1,7 @@
 "use client"
-
+import "./login.css";
 import { useState } from "react"
+import { Eye, EyeOff } from "lucide-react"
 
 
 export default function Login(){
@@ -15,7 +16,7 @@ async function handleLogin(){
 
 
     try{
-        const resposta = await fetch("http://localhost:3000/login",{
+        const resposta = await fetch("http://localhost:3333/login",{
         method: "POST",
         headers: {"Content-Type" : "application/json"},
         body: JSON.stringify({email,senha})
@@ -38,39 +39,44 @@ async function handleLogin(){
 
 return(
     <>
-    <h1>
+
+    <section className="container">
+        <h1 className="titulo">
             Barbearia do Higor
-    </h1>
-    <section>
+        </h1>
 
-        <h3>Entre na sua conta</h3>  
-
-        <input type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-         />
-
-        <input 
-        type={mostraSenha ? "text" : "password" }
-        value={senha}
-        onChange={(s) => setSenha(s.target.value)}
-        />
-
-        <button onClick={() => setMostraSenha(!mostraSenha)}>
-            olhinhos
-        </button>
-
-        <input
-         type="checkbox"
-        checked={manterConectado}
-        onChange={(c) => setMaterConectado(!manterConectado)}
-        />
-
-        <a href="#">Cria conta</a>
-
-        <button onClick={() => handleLogin()}>
-            Entrar
-        </button>
+        <div className="foto">
+            <img src="" alt="" />
+        </div>
+        <div className="form">
+            <h3>Entre na sua conta</h3>
+            <input type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input"
+             />
+            <input
+                type={mostraSenha ? "text" : "password" }
+                value={senha}
+                onChange={(s) => setSenha(s.target.value)}
+                className="input"
+            />
+            <button
+                type="button"
+                onClick={() => setMostraSenha(!mostraSenha)}>
+                {mostraSenha ? <EyeOff size={20} /> : <Eye size={20}/>}
+            </button>
+            <input
+                type="checkbox"
+                checked={manterConectado}
+                onChange={(c) => setMaterConectado(!manterConectado)}
+                className="input"
+            />
+            <a href="#">Cria conta</a>
+            <button onClick={() => handleLogin()} className="btn-entrar">
+                Entrar
+            </button>
+        </div>
 
     </section>
     </>

@@ -1,26 +1,44 @@
-@import "tailwindcss";
+/* Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap");
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* =========================
+     FONTES
+  ========================== */
+
+  --font-title: "Cinzel", serif;
+  --font-body: "Inter", sans-serif;
+
+  /* =========================
+     PALETA PRINCIPAL
+  ========================== */
+
+  --background: #0b0b0b;
+  --surface: #141414;
+
+  --primary: #d4af37;
+  --primary-hover: #c9a227;
+
+  --text: #f5f5f5;
+  --text-secondary: #a1a1aa;
+
+  --border: #262626;
+
+  /* =========================
+     SOMBRAS / EFEITOS
+  ========================== */
+
+  --shadow-gold: rgba(212, 175, 55, 0.18);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--background);
+  color: var(--text);
+  font-family: var(--font-body);
 }
