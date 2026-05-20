@@ -1,7 +1,7 @@
 "use client"
 import "./login.css";
 import { useState } from "react"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, X } from "lucide-react"
 
 export default function Login(){
 
@@ -9,6 +9,13 @@ export default function Login(){
   const [senha, setSenha] = useState("")
   const [mostraSenha, setMostraSenha] = useState(false)
   const [manterConectado, setManterConectado] = useState(false)
+  const [modalAberto, setModalAberto] = useState(false)
+
+  const [nome, setNome] = useState("")
+  const [telefone, setTelefone] = useState("")
+  const [emailCadastro, setEmailCadastro] = useState("")
+  const [senhaCadastro, setSenhaCadastro] = useState("")
+  const [mostraSenhaCadastro, setMostraSenhaCadastro] = useState(false)
 
   async function handleLogin(){
     try {
@@ -17,9 +24,7 @@ export default function Login(){
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, senha })
       })
-
       if (!resposta.ok) throw new Error("Erro ao buscar os dados")
-
       const dados = await resposta.json()
       console.log(dados)
     } catch(error) {
@@ -27,88 +32,192 @@ export default function Login(){
     }
   }
 
+  async function handleCadastro(){
+    try {
+      const resposta = await fetch("http://localhost:3333/cadastro", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome,
+          telefone,
+          email: emailCadastro,
+          senha: senhaCadastro
+        })
+      })
+      if (!resposta.ok) throw new Error("Erro ao cadastrar")
+      const dados = await resposta.json()
+      console.log(dados)
+      setModalAberto(false)
+    } catch(error) {
+      console.log("Ocorreu um erro", error)
+    }
+  }
+
+  function fecharModal(){
+    setModalAberto(false)
+    setNome("")
+    setTelefone("")
+    setEmailCadastro("")
+    setSenhaCadastro("")
+  }
+
   return (
-    <section className="container">
+    <>
+      <section className="container">
 
-      {/* ── Barra do título ── */}
-      <div className="barra-titulo">
-        <h1 className="titulo">✦ Barbearia do Higor ✦</h1>
-      </div>
-
-      {/* ── Conteúdo: foto + form ── */}
-      <div className="conteudo">
-
-        {/* Foto lado esquerdo */}
-        <div className="foto">
-          <img
-            src="/imagem1.png"
-            alt="Barbearia do Higor"
-            className="img"
-          />
+        <div className="img-logo">
+          <img src="/logo.jpeg" alt="" className="logo" />
         </div>
 
-        {/* Formulário lado direito */}
-        <div className="form">
+        <div className="conteudo">
 
-          <h3 className="titulo">Entre na sua conta</h3>
+          <div className="foto">
+            <img
+              src="/imagem1.png"
+              alt="Barbearia do Higor"
+              className="img"
+            />
+          </div>
 
-          {/* E-mail */}
-          <label className="label" htmlFor="email">E-mail</label>
-          <input
-            id="email"
-            type="email"
-            placeholder="seu@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input"
-          />
+          <div className="form">
 
-          {/* Senha com botão olho */}
-          <label className="label" htmlFor="senha">Senha</label>
-          <div className="input-senha-wrapper">
+            <h3 className="titulo">Entre na sua conta</h3>
+
+            <label className="label" htmlFor="email">E-mail</label>
             <input
-              id="senha"
-              type={mostraSenha ? "text" : "password"}
-              placeholder="••••••••"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
+              id="email"
+              type="email"
+              placeholder="seu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="input"
             />
-            <button
-              type="button"
-              className="btn-olho"
-              onClick={() => setMostraSenha(!mostraSenha)}
-              aria-label={mostraSenha ? "Ocultar senha" : "Mostrar senha"}
-            >
-              {mostraSenha ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
 
-          {/* Manter conectado + criar conta */}
-          <div className="form-rodape">
-            <label className="manter-conectado">
+            <label className="label" htmlFor="senha">Senha</label>
+            <div className="input-senha-wrapper">
               <input
-                type="checkbox"
-                checked={manterConectado}
-                onChange={() => setManterConectado(!manterConectado)}
+                id="senha"
+                type={mostraSenha ? "text" : "password"}
+                placeholder="••••••••"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                className="input"
               />
-              Manter conectado
-            </label>
-            <a href="#" className="link-criar">Criar conta</a>
+              <button
+                type="button"
+                className="btn-olho"
+                onClick={() => setMostraSenha(!mostraSenha)}
+                aria-label={mostraSenha ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {mostraSenha ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            <div className="form-rodape">
+              <label className="manter-conectado">
+                <input
+                  type="checkbox"
+                  checked={manterConectado}
+                  onChange={() => setManterConectado(!manterConectado)}
+                />
+                Manter conectado
+              </label>
+              <a
+                href="#"
+                className="link-criar"
+                onClick={(e) => { e.preventDefault(); setModalAberto(true) }}
+              >
+                Criar conta
+              </a>
+            </div>
+
+            <button type="button" onClick={handleLogin} className="btn-entrar">
+              Entrar
+            </button>
+
           </div>
-
-          {/* Botão entrar */}
-          <button
-            type="button"
-            onClick={handleLogin}
-            className="btn-entrar"
-          >
-            Entrar
-          </button>
-
         </div>
-      </div>
+      </section>
 
-    </section>
+      {modalAberto && (
+        <div className="modal-overlay" onClick={fecharModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+
+            <div className="modal-header">
+              <h3 className="modal-titulo">Criar conta</h3>
+              <button
+                type="button"
+                className="modal-fechar"
+                onClick={fecharModal}
+                aria-label="Fechar modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="modal-subtitulo">Preencha seus dados para se cadastrar</p>
+
+            <div className="modal-campos">
+
+              <label className="label" htmlFor="nome">Nome completo</label>
+              <input
+                id="nome"
+                type="text"
+                placeholder="Seu nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                className="input"
+              />
+
+              <label className="label" htmlFor="telefone">Telefone</label>
+              <input
+                id="telefone"
+                type="tel"
+                placeholder="(00) 00000-0000"
+                value={telefone}
+                onChange={(e) => setTelefone(e.target.value)}
+                className="input"
+              />
+
+              <label className="label" htmlFor="email-cadastro">E-mail</label>
+              <input
+                id="email-cadastro"
+                type="email"
+                placeholder="seu@email.com"
+                value={emailCadastro}
+                onChange={(e) => setEmailCadastro(e.target.value)}
+                className="input"
+              />
+
+              <label className="label" htmlFor="senha-cadastro">Senha</label>
+              <div className="input-senha-wrapper">
+                <input
+                  id="senha-cadastro"
+                  type={mostraSenhaCadastro ? "text" : "password"}
+                  placeholder="••••••••"
+                  value={senhaCadastro}
+                  onChange={(e) => setSenhaCadastro(e.target.value)}
+                  className="input"
+                />
+                <button
+                  type="button"
+                  className="btn-olho"
+                  onClick={() => setMostraSenhaCadastro(!mostraSenhaCadastro)}
+                  aria-label={mostraSenhaCadastro ? "Ocultar senha" : "Mostrar senha"}
+                >
+                  {mostraSenhaCadastro ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
+            </div>
+
+            <button type="button" onClick={handleCadastro} className="btn-entrar">
+              Cadastrar
+            </button>
+
+          </div>
+        </div>
+      )}
+    </>
   )
 }
