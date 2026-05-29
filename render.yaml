@@ -8,7 +8,7 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: https://dkeipxtsepodypcuwbbu.supabase.co
+      - key: SUPABASE_URL
         sync: false
-      - key: sb_publishable_GUUQBPp6XBke1I3jAWWsXw_Z_bOHWwh
+      - key: SUPABASE_ANON_KEY
         sync: false
