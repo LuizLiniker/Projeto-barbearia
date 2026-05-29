@@ -1,4 +1,3 @@
-
 const express = require("express")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
@@ -71,7 +70,6 @@ app.post("/usuarios", async (req, res) => {
 
         const {
             nome,
-            sobrenome,
             email,
             senha,
             numero,
@@ -80,7 +78,6 @@ app.post("/usuarios", async (req, res) => {
 
         if (
             !nome ||
-            !sobrenome ||
             !email ||
             !senha
         ) {
@@ -88,10 +85,6 @@ app.post("/usuarios", async (req, res) => {
                 erro: "Dados obrigatórios faltando"
             })
         }
-
-        // nome completo
-        const nomeCompleto =
-            `${nome} ${sobrenome}`
 
         // criptografa senha
         const hashDaSenha =
@@ -105,7 +98,7 @@ app.post("/usuarios", async (req, res) => {
             .from("usuarios")
             .insert([
                 {
-                    nome: nomeCompleto,
+                    nome,
                     email,
                     senha: hashDaSenha,
                     numero,
@@ -338,10 +331,7 @@ app.post("/api/agendamentos", async (req, res) => {
         }
 
         // valida nome
-        if (
-            !cliente.nome?.trim() ||
-            !cliente.sobrenome?.trim()
-        ) {
+        if (!cliente.nome?.trim()) {
             return res.status(400).json({
                 erro: "Nome inválido"
             })
@@ -374,14 +364,8 @@ app.post("/api/agendamentos", async (req, res) => {
             })
         }
 
-        // ============================================================
-        // BUSCAR CLIENTE PELO NOME COMPLETO
-        // ============================================================
-
+        // buscar cliente pelo nome
         let clienteId = null
-
-        const nomeCompleto =
-            `${cliente.nome} ${cliente.sobrenome}`
 
         const {
             data: usuarioExistente,
@@ -389,17 +373,15 @@ app.post("/api/agendamentos", async (req, res) => {
         } = await supabase
             .from("usuarios")
             .select("*")
-            .ilike("nome", nomeCompleto)
+            .ilike("nome", cliente.nome)
             .limit(1)
 
         if (erroUsuario) {
-
             return res.status(500).json({
                 erro: erroUsuario.message
             })
         }
 
-        // se encontrar usuário
         if (
             usuarioExistente &&
             usuarioExistente.length > 0
@@ -635,7 +617,6 @@ app.post("/forgot-password", async (req, res) => {
       })
       .eq("id", user.id);
 
-    // 📧 ENVIO DE EMAIL
     await transporter.sendMail({
       from: `"Barbearia" <${process.env.EMAIL_USER}>`,
       to: email,
@@ -659,6 +640,7 @@ app.post("/forgot-password", async (req, res) => {
     return res.status(500).json({ erro: "Erro ao enviar email" });
   }
 });
+
 app.post("/reset-password", async (req, res) => {
   try {
     const { email, code, newPassword } = req.body;
@@ -682,7 +664,6 @@ app.post("/reset-password", async (req, res) => {
       return res.status(400).json({ erro: "Código expirado" });
     }
 
-    const bcrypt = require("bcryptjs");
     const hash = await bcrypt.hash(newPassword, 10);
 
     await supabase
@@ -709,4 +690,3 @@ app.post("/reset-password", async (req, res) => {
 app.listen(3333, () => {
     console.log("Servidor rodando na porta 3333")
 })
-
