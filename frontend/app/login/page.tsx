@@ -61,29 +61,25 @@ try {
   setEmail("");
   setSenha("");
 
-  Cookies.set(
-  "token",
-  dados.token,
-  {
-      expires: 7
-  }
-)
+  Cookies.set("token", dados.token, {
+    expires: 7,
+    path: "/",
+    sameSite: "Lax",
+  });
 
   if (dados.precisaTrocarSenha) {
-
     router.push("/alterar-senha")
     return
-}
+  }
 
-if (dados.usuario.tipo === "barbeiro") {
-router.push("/admin");
-} else {
-router.push("/tela-agendamento");
-}
+  if (dados.usuario.tipo === "barbeiro") {
+    router.push("/admin");
+  } else {
+    router.push("/tela-agendamento");
+  }
 
 } catch (error) {
   console.log(error);
-
   toast.error("Erro ao realizar login");
 } finally {
   setLoadingLogin(false);
@@ -100,12 +96,12 @@ try {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-nome,
-numero: telefone,
-email: emailCadastro,
-senha: senhaCadastro,
-tipo: "cliente"
-}),
+      nome,
+      numero: telefone,
+      email: emailCadastro,
+      senha: senhaCadastro,
+      tipo: "cliente"
+    }),
   });
 
   if (!resposta.ok) {
@@ -118,6 +114,12 @@ tipo: "cliente"
 
   toast.success("Cadastro realizado com sucesso");
 
+  Cookies.set("token", dados.token, {
+    expires: 7,
+    path: "/",
+    sameSite: "Lax",
+  });
+
   setNome("");
   setTelefone("");
   setEmailCadastro("");
@@ -128,7 +130,6 @@ tipo: "cliente"
   router.push("/tela-agendamento");
 } catch (error) {
   console.log(error);
-
   toast.error("Erro ao realizar cadastro");
 } finally {
   setLoadingCadastro(false);
@@ -384,6 +385,7 @@ return (
       </div>
     </div>
   )}
+
   {modalEsqueciSenha && (
   <div className="modal-overlay" onClick={() => setModalEsqueciSenha(false)}>
     <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -412,9 +414,7 @@ return (
 
               if (!res.ok) return toast.error(data.erro);
 
-              toast.success("Código enviado (ver console)");
-
-              console.log("CÓDIGO:", data.code);
+              toast.success("Código enviado para o e-mail");
 
               setEtapaReset(2);
             }}

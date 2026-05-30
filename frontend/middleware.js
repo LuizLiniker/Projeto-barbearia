@@ -1,47 +1,48 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
+
+// Rotas que exigem autenticação
+const ROTAS_PROTEGIDAS = [
+  "/tela-agendamento",
+  "/admin",
+  "/alterar-senha",
+];
+
+// Rotas públicas (não redireciona se já autenticado)
+const ROTAS_PUBLICAS = ["/login"];
 
 export function middleware(request) {
+  const { pathname } = request.nextUrl;
 
-    const token =
-        request.cookies.get("token")
+  const token = request.cookies.get("token")?.value;
 
-    const pathname =
-        request.nextUrl.pathname
+  const eRotaProtegida = ROTAS_PROTEGIDAS.some((rota) =>
+    pathname.startsWith(rota)
+  );
 
-    // rotas públicas
-    const rotasPublicas = [
-        "/",
-        "/login"
-    ]
+  const eRotaPublica = ROTAS_PUBLICAS.some((rota) =>
+    pathname.startsWith(rota)
+  );
 
-    const rotaPublica =
-        rotasPublicas.includes(pathname)
+  // Sem token tentando acessar rota protegida → vai para login
+  if (eRotaProtegida && !token) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
 
-    // se não tiver token
-    if (!token && !rotaPublica) {
+  // Com token tentando acessar login → vai para agendamento
+  if (eRotaPublica && token) {
+    return NextResponse.redirect(
+      new URL("/tela-agendamento", request.url)
+    );
+  }
 
-        return NextResponse.redirect(
-            new URL("/login", request.url)
-        )
-    }
-
-    // se já estiver logado
-    // e tentar acessar login
-    if (token && rotaPublica) {
-
-        return NextResponse.redirect(
-            new URL(
-                "/tela-agendamento",
-                request.url
-            )
-        )
-    }
-
-    return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
+    "/tela-agendamento/:path*",
+    "/admin/:path*",
+    "/alterar-senha/:path*",
+    "/login",
   ],
-}
+};

@@ -683,6 +683,33 @@ app.post("/reset-password", async (req, res) => {
   }
 });
 
+app.get("/me", verificarToken, async (req, res) => {
+ 
+    try {
+ 
+        const { data, error } = await supabase
+            .from("usuarios")
+            .select("id, nome, email, tipo")
+            .eq("id", req.usuario.userId)
+            .single()
+ 
+        if (error || !data) {
+            return res.status(401).json({
+                erro: "Usuário não encontrado"
+            })
+        }
+ 
+        return res.json(data)
+ 
+    } catch (err) {
+ 
+        return res.status(500).json({
+            erro: "Erro ao verificar usuário"
+        })
+    }
+})
+ 
+
 // ============================================================
 // SERVIDOR
 // ============================================================
