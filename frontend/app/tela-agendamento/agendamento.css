@@ -1,4 +1,3 @@
-
 /* ============================================================
    ROOT NOVO — TEMA MODERNO AZUL
 ============================================================ */
@@ -643,7 +642,7 @@
   }
 
   .formulario-acoes {
-    flex-direction: column;
+    flex-direction: row;
   }
 
   .horarios-grid {
@@ -664,4 +663,3 @@
     font-size: 13px;
   }
 }
-
