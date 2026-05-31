@@ -186,70 +186,6 @@ app.get("/api/disponibilidade", async (req, res) => {
             })
         }
 
-        const inicio = `${data} 00:00:00`
-        const fim = `${data} 23:59:59`
-
-        const { data: agendamentos, error } = await supabase
-            .from("agendamentos")
-            .select("datetime")
-            .gte("datetime", inicio)
-            .lte("datetime", fim)
-
-        if (error) {
-            return res.status(500).json({
-                erro: error.message
-            })
-        }
-
-        const horarios = []
-        let hora = 8
-        let minuto = 0
-        const horaFinal = 19
-
-        while (hora < horaFinal) {
-
-            const horarioFormatado = `${hora.toString().padStart(2, "0")}:${minuto.toString().padStart(2, "0")}`
-
-            const ocupado = agendamentos.some((agendamento) => {
-                const dataAgendada = new Date(agendamento.datetime)
-                const horaAgendada = dataAgendada.getHours().toString().padStart(2, "0")
-                const minutoAgendado = dataAgendada.getMinutes().toString().padStart(2, "0")
-                return `${horaAgendada}:${minutoAgendado}` === horarioFormatado
-            })
-
-            horarios.push({ horario: horarioFormatado, disponivel: !ocupado })
-
-            minuto += 35
-            while (minuto >= 60) {
-                minuto -= 60
-                hora++
-            }
-        }
-
-        return res.json(horarios)
-
-    } catch (err) {
-
-        console.log(err)
-        return res.status(500).json({ erro: "Erro ao buscar disponibilidade" })
-    }
-})
-
-// ============================================================
-// CRIAR AGENDAMENTO
-// ============================================================
-app.get("/api/disponibilidade", async (req, res) => {
-
-    try {
-
-        const { data } = req.query
-
-        if (!data) {
-            return res.status(400).json({
-                erro: "Data não informada"
-            })
-        }
-
         const [ano, mes, dia] = data.split("-").map(Number)
         const diaSemana = new Date(ano, mes - 1, dia).getDay()
 
@@ -314,6 +250,90 @@ app.get("/api/disponibilidade", async (req, res) => {
         return res.status(500).json({ erro: "Erro ao buscar disponibilidade" })
     }
 })
+
+// ============================================================
+// CRIAR AGENDAMENTO
+// ============================================================
+
+app.post("/api/agendamentos", async (req, res) => {
+
+    try {
+
+        const { data, horario, cliente } = req.body
+
+        if (!data || !horario || !cliente) {
+            return res.status(400).json({ erro: "Dados incompletos" })
+        }
+
+        if (!cliente.nome?.trim()) {
+            return res.status(400).json({ erro: "Nome inválido" })
+        }
+
+        const dataCompleta = `${data} ${horario}:00`
+
+        const { data: agendamentoExistente, error: erroBusca } = await supabase
+            .from("agendamentos")
+            .select("*")
+            .eq("datetime", dataCompleta)
+
+        if (erroBusca) {
+            return res.status(500).json({ erro: erroBusca.message })
+        }
+
+        if (agendamentoExistente && agendamentoExistente.length > 0) {
+            return res.status(400).json({ mensagem: "Horário já ocupado" })
+        }
+
+        let clienteId = null
+
+        const { data: usuarioExistente, error: erroUsuario } = await supabase
+            .from("usuarios")
+            .select("*")
+            .ilike("nome", cliente.nome)
+            .limit(1)
+
+        if (erroUsuario) {
+            return res.status(500).json({ erro: erroUsuario.message })
+        }
+
+        if (usuarioExistente && usuarioExistente.length > 0) {
+            clienteId = usuarioExistente[0].id
+        }
+
+        const nomeCompleto = [cliente.nome, cliente.sobrenome]
+            .filter(Boolean)
+            .join(" ")
+            .trim()
+
+        const { data: novoAgendamento, error } = await supabase
+            .from("agendamentos")
+            .insert([{
+                datetime: dataCompleta,
+                cliente_id: clienteId,
+                nome_cliente: nomeCompleto,
+                telefone_cliente: cliente.telefone || null,
+            }])
+            .select()
+
+        if (error) {
+            return res.status(500).json({ erro: error.message })
+        }
+
+        const codigoConfirmacao =
+            "#" + Math.random().toString(36).slice(2, 8).toUpperCase()
+
+        return res.status(201).json({
+            id: novoAgendamento[0].id,
+            codigoConfirmacao
+        })
+
+    } catch (error) {
+
+        console.log(error)
+        return res.status(500).json({ erro: "Erro ao criar agendamento" })
+    }
+})
+
 // ============================================================
 // LISTAR AGENDAMENTOS
 // ============================================================
@@ -374,7 +394,15 @@ app.get("/api/status", (req, res) => {
 
     const agora = new Date()
     const hora = agora.getHours()
-    const aberto = hora >= 9 && hora < 19
+    const diaSemana = agora.getDay()
+
+    let aberto = false
+
+    if (diaSemana >= 1 && diaSemana <= 5) {
+        aberto = hora >= 8 && hora < 21
+    } else if (diaSemana === 6) {
+        aberto = hora >= 8 && hora < 17
+    }
 
     return res.json({
         aberto,
@@ -419,35 +447,37 @@ app.put("/alterar-senha", verificarToken, async (req, res) => {
 // RECUPERAÇÃO DE SENHA
 // ============================================================
 
-const transporter = require("./mailer");
+const transporter = require("./mailer")
 
 app.post("/forgot-password", async (req, res) => {
-  try {
-    const { email } = req.body;
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expira = new Date(Date.now() + 10 * 60 * 1000);
+    try {
 
-    const { data: user, error } = await supabase
-      .from("usuarios")
-      .select("*")
-      .eq("email", email)
-      .single();
+        const { email } = req.body
 
-    if (error || !user) {
-      return res.status(404).json({ erro: "Usuário não encontrado" });
-    }
+        const code = Math.floor(100000 + Math.random() * 900000).toString()
+        const expira = new Date(Date.now() + 10 * 60 * 1000)
 
-    await supabase
-      .from("usuarios")
-      .update({ reset_code: code, reset_expira: expira })
-      .eq("id", user.id);
+        const { data: user, error } = await supabase
+            .from("usuarios")
+            .select("*")
+            .eq("email", email)
+            .single()
 
-    await transporter.sendMail({
-      from: `"Barbearia" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Código de recuperação de senha",
-      html: `
+        if (error || !user) {
+            return res.status(404).json({ erro: "Usuário não encontrado" })
+        }
+
+        await supabase
+            .from("usuarios")
+            .update({ reset_code: code, reset_expira: expira })
+            .eq("id", user.id)
+
+        await transporter.sendMail({
+            from: `"Barbearia" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: "Código de recuperação de senha",
+            html: `
         <div style="font-family: Arial;">
           <h2>Recuperação de Senha</h2>
           <p>Seu código é:</p>
@@ -455,52 +485,56 @@ app.post("/forgot-password", async (req, res) => {
           <p>Ele expira em 10 minutos.</p>
         </div>
       `,
-    });
+        })
 
-    return res.json({ mensagem: "Código enviado para o email" });
+        return res.json({ mensagem: "Código enviado para o email" })
 
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json({ erro: "Erro ao enviar email" });
-  }
-});
+    } catch (err) {
+
+        console.log(err)
+        return res.status(500).json({ erro: "Erro ao enviar email" })
+    }
+})
 
 app.post("/reset-password", async (req, res) => {
-  try {
-    const { email, code, newPassword } = req.body;
 
-    const { data, error } = await supabase
-      .from("usuarios")
-      .select("*")
-      .eq("email", email);
+    try {
 
-    if (error || !data || data.length === 0) {
-      return res.status(404).json({ erro: "Usuário não encontrado" });
+        const { email, code, newPassword } = req.body
+
+        const { data, error } = await supabase
+            .from("usuarios")
+            .select("*")
+            .eq("email", email)
+
+        if (error || !data || data.length === 0) {
+            return res.status(404).json({ erro: "Usuário não encontrado" })
+        }
+
+        const user = data[0]
+
+        if (user.reset_code !== code) {
+            return res.status(400).json({ erro: "Código inválido" })
+        }
+
+        if (new Date(user.reset_expira) < new Date()) {
+            return res.status(400).json({ erro: "Código expirado" })
+        }
+
+        const hash = await bcrypt.hash(newPassword, 10)
+
+        await supabase
+            .from("usuarios")
+            .update({ senha: hash, reset_code: null, reset_expira: null, senha_temporaria: false })
+            .eq("email", email)
+
+        return res.json({ mensagem: "Senha alterada com sucesso" })
+
+    } catch (err) {
+
+        return res.status(500).json({ erro: "Erro ao resetar senha" })
     }
-
-    const user = data[0];
-
-    if (user.reset_code !== code) {
-      return res.status(400).json({ erro: "Código inválido" });
-    }
-
-    if (new Date(user.reset_expira) < new Date()) {
-      return res.status(400).json({ erro: "Código expirado" });
-    }
-
-    const hash = await bcrypt.hash(newPassword, 10);
-
-    await supabase
-      .from("usuarios")
-      .update({ senha: hash, reset_code: null, reset_expira: null, senha_temporaria: false })
-      .eq("email", email);
-
-    return res.json({ mensagem: "Senha alterada com sucesso" });
-
-  } catch (err) {
-    return res.status(500).json({ erro: "Erro ao resetar senha" });
-  }
-});
+})
 
 // ============================================================
 // VALIDAR TOKEN
