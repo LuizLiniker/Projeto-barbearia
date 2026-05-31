@@ -259,6 +259,7 @@ app.get("/api/disponibilidade", async (req, res) => {
 
         const ehSabado = diaSemana === 6
         const horaFinal = ehSabado ? 17 : 21
+        const horaFinalMin = horaFinal * 60
 
         const inicio = `${data} 00:00:00`
         const fim = `${data} 23:59:59`
@@ -279,7 +280,7 @@ app.get("/api/disponibilidade", async (req, res) => {
         let hora = 8
         let minuto = 0
 
-        while (hora < horaFinal) {
+        while ((hora * 60 + minuto) < horaFinalMin) {
 
             const totalMinutos = hora * 60 + minuto
             const emIntervalo = totalMinutos >= 12 * 60 && totalMinutos < 14 * 60
