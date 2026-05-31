@@ -233,7 +233,7 @@ export default function SistemaAgendamento() {
   // CARREGAR HORÁRIOS
   // ============================================================
 
-  useEffect(() => {
+useEffect(() => {
     async function carregarHorarios() {
       if (!dataSelecionada) return;
 
@@ -241,8 +241,15 @@ export default function SistemaAgendamento() {
         setCarregandoHorarios(true);
         const dataISO = toISOLocal(dataSelecionada);
         const res = await fetch(`${API_URL}/api/disponibilidade?data=${dataISO}`);
-        const data = await res.json();
-        setHorarios(data);
+        const data: SlotHorario[] = await res.json();
+
+        const semIntervalo = data.filter(({ horario }) => {
+          const [h, m] = horario.split(':').map(Number);
+          const totalMin = h * 60 + m;
+          return totalMin < 12 * 60 || totalMin >= 14 * 60;
+        });
+
+        setHorarios(semIntervalo);
       } catch (err) {
         console.error(err);
       } finally {

@@ -250,12 +250,11 @@ app.get("/api/disponibilidade", async (req, res) => {
             })
         }
 
-        // Detecta o dia da semana (0 = domingo, 6 = sábado)
         const [ano, mes, dia] = data.split("-").map(Number)
         const diaSemana = new Date(ano, mes - 1, dia).getDay()
 
         if (diaSemana === 0) {
-            return res.json([]) // Domingo fechado
+            return res.json([])
         }
 
         const ehSabado = diaSemana === 6
@@ -282,12 +281,13 @@ app.get("/api/disponibilidade", async (req, res) => {
 
         while (hora < horaFinal) {
 
-            const horarioFormatado = `${hora.toString().padStart(2, "0")}:${minuto.toString().padStart(2, "0")}`
-
-            // Intervalo de almoço: pula de 12:00 até 14:00 (exclusive)
-            const emIntervalo = hora === 12 || hora === 13
+            const totalMinutos = hora * 60 + minuto
+            const emIntervalo = totalMinutos >= 12 * 60 && totalMinutos < 14 * 60
 
             if (!emIntervalo) {
+
+                const horarioFormatado = `${hora.toString().padStart(2, "0")}:${minuto.toString().padStart(2, "0")}`
+
                 const ocupado = agendamentos.some((agendamento) => {
                     const dataAgendada = new Date(agendamento.datetime)
                     const horaAgendada = dataAgendada.getHours().toString().padStart(2, "0")
