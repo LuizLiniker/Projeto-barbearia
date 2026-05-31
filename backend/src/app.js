@@ -238,88 +238,81 @@ app.get("/api/disponibilidade", async (req, res) => {
 // ============================================================
 // CRIAR AGENDAMENTO
 // ============================================================
-
-app.post("/api/agendamentos", async (req, res) => {
+app.get("/api/disponibilidade", async (req, res) => {
 
     try {
 
-        const { data, horario, cliente } = req.body
+        const { data } = req.query
 
-        if (!data || !horario || !cliente) {
-            return res.status(400).json({ erro: "Dados incompletos" })
+        if (!data) {
+            return res.status(400).json({
+                erro: "Data não informada"
+            })
         }
 
-        if (!cliente.nome?.trim()) {
-            return res.status(400).json({ erro: "Nome inválido" })
+        // Detecta o dia da semana (0 = domingo, 6 = sábado)
+        const [ano, mes, dia] = data.split("-").map(Number)
+        const diaSemana = new Date(ano, mes - 1, dia).getDay()
+
+        if (diaSemana === 0) {
+            return res.json([]) // Domingo fechado
         }
 
-        const dataCompleta = `${data} ${horario}:00`
+        const ehSabado = diaSemana === 6
+        const horaFinal = ehSabado ? 17 : 21
 
-        const { data: agendamentoExistente, error: erroBusca } = await supabase
+        const inicio = `${data} 00:00:00`
+        const fim = `${data} 23:59:59`
+
+        const { data: agendamentos, error } = await supabase
             .from("agendamentos")
-            .select("*")
-            .eq("datetime", dataCompleta)
-
-        if (erroBusca) {
-            return res.status(500).json({ erro: erroBusca.message })
-        }
-
-        if (agendamentoExistente && agendamentoExistente.length > 0) {
-            return res.status(400).json({ mensagem: "Horário já ocupado" })
-        }
-
-        // busca cliente pelo nome para pegar o id
-        let clienteId = null
-
-        const { data: usuarioExistente, error: erroUsuario } = await supabase
-            .from("usuarios")
-            .select("*")
-            .ilike("nome", cliente.nome)
-            .limit(1)
-
-        if (erroUsuario) {
-            return res.status(500).json({ erro: erroUsuario.message })
-        }
-
-        if (usuarioExistente && usuarioExistente.length > 0) {
-            clienteId = usuarioExistente[0].id
-        }
-
-        // monta nome completo
-        const nomeCompleto = [cliente.nome, cliente.sobrenome]
-            .filter(Boolean)
-            .join(" ")
-            .trim()
-
-        const { data: novoAgendamento, error } = await supabase
-            .from("agendamentos")
-            .insert([{
-                datetime: dataCompleta,
-                cliente_id: clienteId,
-                nome_cliente: nomeCompleto,
-                telefone_cliente: cliente.telefone || null,
-            }])
-            .select()
+            .select("datetime")
+            .gte("datetime", inicio)
+            .lte("datetime", fim)
 
         if (error) {
-            return res.status(500).json({ erro: error.message })
+            return res.status(500).json({
+                erro: error.message
+            })
         }
 
-        const codigoConfirmacao =
-            "#" + Math.random().toString(36).slice(2, 8).toUpperCase()
+        const horarios = []
+        let hora = 8
+        let minuto = 0
 
-        return res.status(201).json({
-            id: novoAgendamento[0].id,
-            codigoConfirmacao
-        })
+        while (hora < horaFinal) {
 
-    } catch (error) {
+            const horarioFormatado = `${hora.toString().padStart(2, "0")}:${minuto.toString().padStart(2, "0")}`
 
-        console.log(error)
-        return res.status(500).json({ erro: "Erro ao criar agendamento" })
+            // Intervalo de almoço: pula de 12:00 até 14:00 (exclusive)
+            const emIntervalo = hora === 12 || hora === 13
+
+            if (!emIntervalo) {
+                const ocupado = agendamentos.some((agendamento) => {
+                    const dataAgendada = new Date(agendamento.datetime)
+                    const horaAgendada = dataAgendada.getHours().toString().padStart(2, "0")
+                    const minutoAgendado = dataAgendada.getMinutes().toString().padStart(2, "0")
+                    return `${horaAgendada}:${minutoAgendado}` === horarioFormatado
+                })
+
+                horarios.push({ horario: horarioFormatado, disponivel: !ocupado })
+            }
+
+            minuto += 35
+            while (minuto >= 60) {
+                minuto -= 60
+                hora++
+            }
+        }
+
+        return res.json(horarios)
+
+    } catch (err) {
+
+        console.log(err)
+        return res.status(500).json({ erro: "Erro ao buscar disponibilidade" })
     }
 })
-
 // ============================================================
 // LISTAR AGENDAMENTOS
 // ============================================================
