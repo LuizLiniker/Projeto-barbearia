@@ -424,7 +424,7 @@ useEffect(() => {
           </div>
         )}
 
-        {/* HORÁRIOS */}
+{/* HORÁRIOS */}
         {etapaAtual === 'horarios' && dataSelecionada && (
           <div className="sistema-card">
             <button className="btn-voltar" onClick={() => setEtapaAtual('calendario')}>
@@ -437,24 +437,31 @@ useEffect(() => {
             {carregandoHorarios ? (
               <p>Carregando horários...</p>
             ) : (
-              <div className="horarios-grid">
-                {horarios.map(({ horario, disponivel }) => (
-                  <button
-                    key={horario}
-                    disabled={!disponivel}
-                    onClick={() => handleSelecionarHorario(horario)}
-                    className={[
-                      'horario-btn',
-                      !disponivel ? 'horario-btn-desabilitado' : '',
-                    ].filter(Boolean).join(' ')}
-                  >
-                    {horario}
-                    {!disponivel && (
-                      <span className="horario-btn-label-ocupado">Ocupado</span>
-                    )}
-                  </button>
-                ))}
-              </div>
+              <>
+                <div className="horarios-scroll-wrapper">
+                  <div className="horarios-lista">
+                    {horarios.map(({ horario, disponivel }) => (
+                      <button
+                        key={horario}
+                        disabled={!disponivel}
+                        onClick={() => handleSelecionarHorario(horario)}
+                        className={[
+                          'horario-btn',
+                          !disponivel ? 'horario-btn-desabilitado' : '',
+                        ].filter(Boolean).join(' ')}
+                      >
+                        {horario}
+                        {!disponivel && (
+                          <span className="horario-btn-label-ocupado">Ocupado</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Dica de scroll — visível só em desktop */}
+                <p className="horarios-dica-scroll">← deslize para ver mais →</p>
+              </>
             )}
           </div>
         )}

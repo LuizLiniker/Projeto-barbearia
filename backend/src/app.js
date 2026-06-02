@@ -174,6 +174,39 @@ app.post("/login", async (req, res) => {
 // DISPONIBILIDADE
 // ============================================================
 
+// Regras de horário por dia da semana:
+//   0 = Domingo  → fechado
+//   1 = Segunda  → 14:00 - 21:00 (sem intervalo de almoço, pois começa às 14h)
+//   2 = Terça    → 09:00 - 21:00 (intervalo 12:00-14:00)
+//   3 = Quarta   → 09:00 - 21:00 (intervalo 12:00-14:00)
+//   4 = Quinta   → 09:00 - 21:00 (intervalo 12:00-14:00)
+//   5 = Sexta    → 08:00 - 21:00 (intervalo 12:00-14:00)
+//   6 = Sábado   → 08:00 - 17:00 (sem intervalo)
+
+function getConfiguracaoDia(diaSemana) {
+    switch (diaSemana) {
+        case 0: // Domingo
+            return null // fechado
+
+        case 1: // Segunda
+            return { horaInicio: 14, minutoInicio: 0, horaFim: 21, temIntervalo: false }
+
+        case 2: // Terça
+        case 3: // Quarta
+        case 4: // Quinta
+            return { horaInicio: 9, minutoInicio: 0, horaFim: 21, temIntervalo: true }
+
+        case 5: // Sexta
+            return { horaInicio: 8, minutoInicio: 0, horaFim: 21, temIntervalo: true }
+
+        case 6: // Sábado
+            return { horaInicio: 8, minutoInicio: 0, horaFim: 17, temIntervalo: false }
+
+        default:
+            return null
+    }
+}
+
 app.get("/api/disponibilidade", async (req, res) => {
 
     try {
@@ -189,13 +222,11 @@ app.get("/api/disponibilidade", async (req, res) => {
         const [ano, mes, dia] = data.split("-").map(Number)
         const diaSemana = new Date(ano, mes - 1, dia).getDay()
 
-        if (diaSemana === 0) {
+        const config = getConfiguracaoDia(diaSemana)
+
+        if (!config) {
             return res.json([])
         }
-
-        const ehSabado = diaSemana === 6
-        const horaFinal = ehSabado ? 17 : 21
-        const horaFinalMin = horaFinal * 60
 
         const inicio = `${data} 00:00:00`
         const fim = `${data} 23:59:59`
@@ -213,13 +244,18 @@ app.get("/api/disponibilidade", async (req, res) => {
         }
 
         const horarios = []
-        let hora = 8
-        let minuto = 0
+        let hora = config.horaInicio
+        let minuto = config.minutoInicio
+        const horaFinalMin = config.horaFim * 60
 
         while ((hora * 60 + minuto) < horaFinalMin) {
 
             const totalMinutos = hora * 60 + minuto
-            const emIntervalo = totalMinutos >= 12 * 60 && totalMinutos < 14 * 60
+
+            // Intervalo de almoço 12:00-14:00 (apenas para dias que têm intervalo)
+            const emIntervalo = config.temIntervalo &&
+                totalMinutos >= 12 * 60 &&
+                totalMinutos < 14 * 60
 
             if (!emIntervalo) {
 
@@ -398,11 +434,20 @@ app.get("/api/status", (req, res) => {
 
     let aberto = false
 
-    if (diaSemana >= 1 && diaSemana <= 5) {
+    if (diaSemana === 1) {
+        // Segunda: abre às 14h
+        aberto = hora >= 14 && hora < 21
+    } else if (diaSemana >= 2 && diaSemana <= 4) {
+        // Ter, Qua, Qui: abre às 9h
+        aberto = hora >= 9 && hora < 21
+    } else if (diaSemana === 5) {
+        // Sexta: abre às 8h
         aberto = hora >= 8 && hora < 21
     } else if (diaSemana === 6) {
+        // Sábado: abre às 8h, fecha às 17h
         aberto = hora >= 8 && hora < 17
     }
+    // Domingo (0): permanece false
 
     return res.json({
         aberto,

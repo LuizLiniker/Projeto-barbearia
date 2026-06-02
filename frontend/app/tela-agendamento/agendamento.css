@@ -396,17 +396,42 @@
 }
 
 /* ============================================================
-   HORÁRIOS
+   HORÁRIOS — LAYOUT HORIZONTAL COM SCROLL
 ============================================================ */
 
-.horarios-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+.horarios-scroll-wrapper {
+  /* Margem negativa para o scroll sangrar até a borda do card */
+  margin: 0 -28px;
+  padding: 0 28px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+}
+
+.horarios-scroll-wrapper::-webkit-scrollbar {
+  display: none; /* Chrome / Safari */
+}
+
+.horarios-lista {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 10px;
+
+  /* Garante que o conteúdo não encolha */
+  width: max-content;
+
+  /* Pequeno padding à direita para o último item não ficar colado */
+  padding-right: 28px;
+  padding-bottom: 4px;
 }
 
 .horario-btn {
-  padding: 14px 10px;
+  flex-shrink: 0;
+
+  /* Tamanho fixo: botão quadrado-ish */
+  width: 80px;
+  padding: 14px 6px;
 
   border-radius: 16px;
 
@@ -417,6 +442,7 @@
 
   font-weight: 700;
   font-size: 15px;
+  text-align: center;
 
   cursor: pointer;
   transition: var(--transition);
@@ -432,13 +458,37 @@
 .horario-btn-desabilitado {
   opacity: 0.35;
   cursor: not-allowed;
+  border-color: rgba(255,255,255,0.06);
 }
 
 .horario-btn-label-ocupado {
   display: block;
-  margin-top: 4px;
+  margin-top: 5px;
   font-size: 9px;
+  font-weight: 600;
   color: var(--danger);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Dica de scroll visível em desktop */
+.horarios-dica-scroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  color: var(--foreground-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  /* Esconde em telas pequenas pois é óbvio no touch */
+}
+
+@media (max-width: 520px) {
+  .horarios-dica-scroll {
+    display: none;
+  }
 }
 
 /* ============================================================
@@ -645,13 +695,14 @@
     flex-direction: row;
   }
 
-  .horarios-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+  /* Ajuste do scroll wrapper para padding do card mobile */
+  .horarios-scroll-wrapper {
+    margin: 0 -18px;
+    padding: 0 18px;
   }
 
   .horario-btn {
-    padding: 16px 8px;
+    width: 72px;
     font-size: 14px;
   }
 
