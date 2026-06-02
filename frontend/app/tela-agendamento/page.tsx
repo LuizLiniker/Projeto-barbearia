@@ -438,29 +438,59 @@ useEffect(() => {
               <p>Carregando horários...</p>
             ) : (
               <>
-                <div className="horarios-scroll-wrapper">
-                  <div className="horarios-lista">
-                    {horarios.map(({ horario, disponivel }) => (
-                      <button
-                        key={horario}
-                        disabled={!disponivel}
-                        onClick={() => handleSelecionarHorario(horario)}
-                        className={[
-                          'horario-btn',
-                          !disponivel ? 'horario-btn-desabilitado' : '',
-                        ].filter(Boolean).join(' ')}
-                      >
-                        {horario}
-                        {!disponivel && (
-                          <span className="horario-btn-label-ocupado">Ocupado</span>
-                        )}
-                      </button>
-                    ))}
+                {/* Turno da manhã */}
+                {horarios.some(({ horario }) => parseInt(horario) < 12) && (
+                  <div className="horarios-turno">
+                    <div className="turno-header">
+                      <span className="turno-icone">☀</span>
+                      <span className="turno-nome">Manhã</span>
+                    </div>
+                    <div className="turno-scroll">
+                      {horarios
+                        .filter(({ horario }) => parseInt(horario) < 12)
+                        .map(({ horario, disponivel }) => (
+                          <button
+                            key={horario}
+                            disabled={!disponivel}
+                            onClick={() => handleSelecionarHorario(horario)}
+                            className={[
+                              'horario-btn',
+                              !disponivel ? 'horario-btn-desabilitado' : '',
+                            ].filter(Boolean).join(' ')}
+                          >
+                            {horario}
+                          </button>
+                        ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Dica de scroll — visível só em desktop */}
-                <p className="horarios-dica-scroll">← deslize para ver mais →</p>
+                {/* Turno da tarde */}
+                {horarios.some(({ horario }) => parseInt(horario) >= 14) && (
+                  <div className="horarios-turno">
+                    <div className="turno-header">
+                      <span className="turno-icone">🌙</span>
+                      <span className="turno-nome">Tarde</span>
+                    </div>
+                    <div className="turno-scroll">
+                      {horarios
+                        .filter(({ horario }) => parseInt(horario) >= 14)
+                        .map(({ horario, disponivel }) => (
+                          <button
+                            key={horario}
+                            disabled={!disponivel}
+                            onClick={() => handleSelecionarHorario(horario)}
+                            className={[
+                              'horario-btn',
+                              !disponivel ? 'horario-btn-desabilitado' : '',
+                            ].filter(Boolean).join(' ')}
+                          >
+                            {horario}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>

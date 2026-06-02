@@ -396,44 +396,50 @@
 }
 
 /* ============================================================
-   HORÁRIOS — LAYOUT HORIZONTAL COM SCROLL
+   HORÁRIOS — BOTÕES LARGOS POR TURNO (SCROLL HORIZONTAL)
 ============================================================ */
 
-.horarios-scroll-wrapper {
-  /* Margem negativa para o scroll sangrar até a borda do card */
-  margin: 0 -28px;
-  padding: 0 28px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
+.horarios-turno {
+  margin-bottom: 22px;
 }
 
-.horarios-scroll-wrapper::-webkit-scrollbar {
-  display: none; /* Chrome / Safari */
+.horarios-turno:last-child {
+  margin-bottom: 0;
 }
 
-.horarios-lista {
+.turno-header {
   display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
 
-  /* Garante que o conteúdo não encolha */
-  width: max-content;
+.turno-icone {
+  font-size: 15px;
+  color: var(--foreground-muted);
+}
 
-  /* Pequeno padding à direita para o último item não ficar colado */
-  padding-right: 28px;
-  padding-bottom: 4px;
+.turno-nome {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--foreground-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.turno-scroll {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .horario-btn {
-  flex-shrink: 0;
+  flex: 1 1 calc(25% - 8px);
+  min-width: 72px;
 
-  /* Tamanho fixo: botão quadrado-ish */
-  width: 80px;
-  padding: 14px 6px;
+  padding: 12px 8px;
 
-  border-radius: 16px;
+  border-radius: 14px;
 
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--primary-border);
@@ -443,6 +449,7 @@
   font-weight: 700;
   font-size: 15px;
   text-align: center;
+  white-space: nowrap;
 
   cursor: pointer;
   transition: var(--transition);
@@ -451,44 +458,14 @@
 .horario-btn:hover:not(:disabled) {
   background: var(--primary-light);
   color: var(--primary);
-
   transform: translateY(-2px);
 }
 
 .horario-btn-desabilitado {
-  opacity: 0.35;
+  opacity: 0.25;
   cursor: not-allowed;
   border-color: rgba(255,255,255,0.06);
-}
-
-.horario-btn-label-ocupado {
-  display: block;
-  margin-top: 5px;
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--danger);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-/* Dica de scroll visível em desktop */
-.horarios-dica-scroll {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 12px;
-  color: var(--foreground-muted);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  /* Esconde em telas pequenas pois é óbvio no touch */
-}
-
-@media (max-width: 520px) {
-  .horarios-dica-scroll {
-    display: none;
-  }
+  text-decoration: line-through;
 }
 
 /* ============================================================
@@ -695,15 +672,10 @@
     flex-direction: row;
   }
 
-  /* Ajuste do scroll wrapper para padding do card mobile */
-  .horarios-scroll-wrapper {
-    margin: 0 -18px;
-    padding: 0 18px;
-  }
-
   .horario-btn {
-    width: 72px;
+    flex: 1 1 calc(33% - 8px);
     font-size: 14px;
+    padding: 12px 6px;
   }
 
   .calendario-grid {
