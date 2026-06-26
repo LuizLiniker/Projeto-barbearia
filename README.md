@@ -45,4 +45,4 @@ todos os agendamentos do dia em um painel admin.
 ## 👨‍💻 Autor
 
 Luiz Liniker  
-[LinkedIn](www.linkedin.com/in/liniker-braz)
+[LinkedIn](https://www.linkedin.com/in/liniker-braz)
